@@ -8,7 +8,28 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173" }));
+// CORS configuration: support single origin, comma-separated origins, or wildcard '*'.
+const corsOriginEnv = process.env.CORS_ORIGIN || 'http://localhost:5173';
+if (corsOriginEnv === '*') {
+  // allow all origins (temporary/debugging only)
+  app.use(cors());
+  console.log('CORS: allowing all origins (CORS_ORIGIN=* )');
+} else {
+  const allowedOrigins = corsOriginEnv.split(',').map(o => o.trim()).filter(Boolean);
+  const corsOptions = {
+    origin: function (origin, callback) {
+      // allow requests with no origin (e.g., server-to-server, mobile apps, or same-origin)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+      return callback(new Error('CORS policy: This origin is not allowed - ' + origin));
+    },
+    optionsSuccessStatus: 200,
+  };
+  app.use(cors(corsOptions));
+  console.log('CORS allowed origins:', allowedOrigins);
+}
 app.use(bodyParser.json());
 
 // ==========================

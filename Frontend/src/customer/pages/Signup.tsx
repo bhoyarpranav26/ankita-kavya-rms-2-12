@@ -14,7 +14,8 @@ interface OTPVerificationProps {
   onBack: () => void
 }
 
-const OTPVerification: React.FC<OTPVerificationProps> = ({ email, onVerify, onResend, onBack }) => {
+const OTPVerification: React.FC<OTPVerificationProps> = (props: OTPVerificationProps) => {
+  const { email, onVerify, onResend, onBack } = props
   const [otp, setOtp] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [resendTimer, setResendTimer] = useState(30)
@@ -212,7 +213,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({ email, onVerify, onRe
   )
 }
 
-const Signup: React.FC<SignupProps> = ({ onClose, onSwitchToLogin, onSignup }) => {
+const Signup: React.FC<SignupProps> = (props: SignupProps) => {
+  const { onClose, onSwitchToLogin, onSignup } = props
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -336,7 +338,9 @@ const Signup: React.FC<SignupProps> = ({ onClose, onSwitchToLogin, onSignup }) =
       if (!res.ok) throw new Error(data.message || 'Signup failed')
       setShowOTPVerification(true)
     } catch (err: any) {
-      alert(err.message || 'Failed to send OTP')
+      console.error('Signup request failed:', err)
+      // Provide a clearer message for network / CORS issues in production
+      alert(err.message || 'Network error: failed to reach the server. Please check your connection or try again later.')
     } finally {
       setIsLoading(false)
     }
@@ -361,7 +365,8 @@ const Signup: React.FC<SignupProps> = ({ onClose, onSwitchToLogin, onSignup }) =
           password: formData.password,
         })
       } catch (err: any) {
-        alert(err.message || 'OTP verification failed')
+        console.error('OTP verification failed:', err)
+        alert(err.message || 'OTP verification failed: network error or server issue.')
       }
     })()
   }
@@ -382,8 +387,9 @@ const Signup: React.FC<SignupProps> = ({ onClose, onSwitchToLogin, onSignup }) =
         const data = await res.json()
         if (!res.ok) throw new Error(data.message || 'Resend failed')
         alert('OTP resent to ' + formData.email)
-      } catch (err: any) {
-        alert(err.message || 'Failed to resend OTP')
+        } catch (err: any) {
+        console.error('Resend OTP failed:', err)
+        alert(err.message || 'Failed to resend OTP: network error or server issue.')
       }
     })()
   }

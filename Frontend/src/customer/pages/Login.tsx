@@ -8,7 +8,8 @@ interface LoginProps {
   onLogin: (token: string, user: any) => void
 }
 
-const Login: React.FC<LoginProps> = ({ onClose, onSwitchToSignup, onLogin }) => {
+const Login: React.FC<LoginProps> = (props: LoginProps) => {
+  const { onClose, onSwitchToSignup, onLogin } = props
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -58,7 +59,8 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToSignup, onLogin }) => 
   // Pass token and user object to parent
   onLogin(data.token, data.user)
     } catch (err: any) {
-      alert(err.message || 'Login failed')
+      console.error('Login request failed:', err)
+      alert(err.message || 'Network error: failed to reach the server. Please check your connection or try again later.')
     } finally {
       setIsLoading(false)
     }

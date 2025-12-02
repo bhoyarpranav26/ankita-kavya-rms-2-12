@@ -55,7 +55,8 @@ const WelcomePage = () => {
         setShowAuthModal(false)
         navigate('/Category')
       } catch (err) {
-        alert(err.message || 'Login failed')
+        console.error('Login failed (WelcomePage):', err)
+        alert(err.message || 'Network error: failed to reach the server. Please check your connection or try again later.')
       }
     })()
   }
@@ -77,6 +78,7 @@ const WelcomePage = () => {
         setShowAuthModal(false)
         navigate('/Category')
       } catch (err) {
+        console.error('Auto-login after signup failed:', err)
         alert(err.message || 'Signup succeeded but auto-login failed. Please login manually.')
       }
     })()
