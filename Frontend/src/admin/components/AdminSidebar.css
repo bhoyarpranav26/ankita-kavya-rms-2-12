@@ -1,0 +1,110 @@
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background: linear-gradient(180deg, #5f2eea 0%, #6022d8 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.5rem;
+  transition: all 0.3s ease;
+  z-index: 1100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+}
+ 
+.admin-sidebar.collapsed {
+  width: 80px;
+}
+ 
+.sidebar-header {
+  padding: 0 1rem;
+}
+ 
+.sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+ 
+.sidebar-toggle-btn:hover {
+  color: #ffd700;
+}
+ 
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+ 
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #ddd;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin: 4px 6px;
+  font-weight: 500;
+}
+ 
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+ 
+.sidebar-link.active {
+  background: #fff;
+  color: #5f2eea;
+}
+ 
+.sidebar-icon {
+  font-size: 1.2rem;
+}
+ 
+.sidebar-text {
+  transition: opacity 0.3s ease;
+}
+ 
+.admin-sidebar.collapsed .sidebar-text {
+  opacity: 0;
+  pointer-events: none;
+}
+ 
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem;
+}
+ 
+.logout-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+ 
+.logout-btn:hover {
+  background: #fff;
+  color: #5f2eea;
+}
+ 
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+ 
