@@ -1,0 +1,16 @@
+{
+  "name": "kavyaresto-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start:backend": "node Backend/index.js",
+    "dev:backend": "cd Backend && npm run dev",
+    "start:frontend": "cd Frontend && npm start",
+    "build:frontend": "cd Frontend && npm run build",
+    "start": "npm run start:backend",
+    "start:all": "concurrently \"npm:dev:backend\" \"cd Frontend && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}

@@ -8,8 +8,34 @@ try { sendgrid = require('@sendgrid/mail'); } catch (e) { sendgrid = null }
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+// Email transporter setup
+// Priority:
+// 1) If SKIP_EMAIL=true -> mock transporter (no sending)
+// 2) If EMAIL_USER & EMAIL_PASS provided -> use nodemailer (SMTP)
+// 3) Else if SENDGRID_API_KEY provided -> use SendGrid
+// 4) Else -> mock (logs to console)
 let transporter = null;
-if (process.env.SENDGRID_API_KEY && sendgrid) {
+const skipEmail = String(process.env.SKIP_EMAIL).toLowerCase() === 'true';
+if (skipEmail) {
+  console.log('Email sending is disabled via SKIP_EMAIL=true')
+  transporter = {
+    sendMail: async (mailOptions) => {
+      console.log('--- Mock sendMail called (SKIP_EMAIL) ---')
+      console.log(mailOptions)
+      return Promise.resolve()
+    }
+  }
+} else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  // Prefer SMTP when credentials are provided (e.g., Gmail app password)
+  transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  console.log('Email transporter: using SMTP (nodemailer)')
+} else if (process.env.SENDGRID_API_KEY && sendgrid) {
   sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
   transporter = {
     sendMail: async (mailOptions) => {
@@ -18,27 +44,22 @@ if (process.env.SENDGRID_API_KEY && sendgrid) {
         from: mailOptions.from || (process.env.EMAIL_FROM || 'no-reply@kavyaresto.com'),
         subject: mailOptions.subject,
         text: mailOptions.text,
+        html: mailOptions.html,
       };
       return sendgrid.send(msg);
     }
   }
-} else if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  console.log('Email transporter: using SendGrid')
 } else {
   // Fallback transporter that logs the message to console (useful in dev)
   transporter = {
     sendMail: async (mailOptions) => {
-      console.log('--- Mock sendMail called ---')
+      console.log('--- Mock sendMail called (no email provider configured) ---')
       console.log(mailOptions)
       return Promise.resolve()
     }
   }
+  console.log('Email transporter: no provider configured, using mock logger')
 }
 
 // SIGNUP: save user (unverified) and send OTP by email
@@ -86,12 +107,16 @@ exports.signup = async (req, res) => {
 // helper: send OTP email (reusable)
 async function sendOtpEmail(name, email, otp) {
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER || 'no-reply@kavyaresto.local',
+    const fromAddr = process.env.EMAIL_FROM || process.env.EMAIL_USER || 'no-reply@kavyaresto.com'
+    const mailOptions = {
+      from: fromAddr,
       to: email,
       subject: 'Your OTP from KavyaServe',
       text: `Hello ${name},\n\nYour OTP is ${otp}. It expires in 10 minutes.\n\nIf you didn't request this, ignore this mail.`,
-    })
+      html: `<p>Hello ${name},</p><p>Your one-time verification code (OTP) is <strong>${otp}</strong>.</p><p>This code expires in 10 minutes.</p><p>If you didn't request this, please ignore this email.</p>`
+    }
+
+    await transporter.sendMail(mailOptions)
     return { ok: true }
   } catch (err) {
     console.error('sendOtpEmail error:', err)
@@ -103,8 +128,10 @@ async function sendOtpEmail(name, email, otp) {
 exports.resendOtp = async (req, res) => {
   try {
     const { email } = req.body
+    console.log('Resend OTP invoked for:', email)
     if (!email) return res.status(400).json({ message: 'Email required' })
     const user = await User.findOne({ email })
+    console.log('Resend OTP - user lookup result:', !!user, user ? { email: user.email, verified: user.verified } : null)
     if (!user) return res.status(404).json({ message: 'User not found' })
 
     // generate new OTP if expired or missing
@@ -118,7 +145,9 @@ exports.resendOtp = async (req, res) => {
       await user.save()
     }
 
+    console.log('Resend OTP - calling sendOtpEmail with otp:', otp)
     const result = await sendOtpEmail(user.name || 'User', email, otp)
+    console.log('Resend OTP - sendOtpEmail result:', result && result.ok)
     if (!result.ok) return res.status(500).json({ message: 'Failed to send OTP email' })
     return res.status(200).json({ message: 'OTP resent' })
   } catch (err) {

@@ -32,6 +32,20 @@ if (corsOriginEnv === '*') {
 }
 app.use(bodyParser.json());
 
+// If a built frontend exists (Frontend/dist), serve it as static files.
+// This allows a single service to host both API and frontend (useful for single-container deploys).
+const path = require('path')
+const fs = require('fs')
+const frontendDist = path.join(__dirname, '..', 'Frontend', 'dist')
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist))
+  // Serve index.html for all non-API routes
+  app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(frontendDist, 'index.html'))
+  })
+  console.log('Serving frontend static files from', frontendDist)
+}
+
 // ==========================
 // ✅ MongoDB Connection
 // ==========================
